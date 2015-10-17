@@ -13,6 +13,7 @@ public class NeuralNetwork {
 	private final double argMomentum; // Momentum
 	private final double inputPatterns[][]; // Input Patterns 2D array
 	private final double idealOutputs[][]; // IdealOutputs
+	private double totalError;
 
 	// Argument about output
 	private double idealOutput;
@@ -27,6 +28,8 @@ public class NeuralNetwork {
 	private Matrix martix_weight_InputHidden;
 	// Backpropagation weight delta
 	private Matrix matrix_weight_delta_InputHidden;
+	// Backpropagation weight privious delta
+	private Matrix matrix_weight_privious_delta_InputHidden;
 	// Hidden Layer's input
 	private Matrix matrix_HiddenLayerInputSignal;
 	// Hidden Layer's output
@@ -35,6 +38,8 @@ public class NeuralNetwork {
 	private Matrix matrix_weight_HiddenOutput;
 	// delta Weight Between Hidden and Output Layer
 	private Matrix matrix_weight_delta_HiddenOutput;
+	// delta Weight Between Hidden and Output Layer privious
+	private Matrix matrix_weight_privious_delta_HiddenOutput;
 	// Output Layer's Input Signal
 	private Matrix matrix_OutputLayerInputSignal;
 
@@ -50,17 +55,20 @@ public class NeuralNetwork {
 		this.argMomentum = argMomentum;
 		this.inputPatterns = inputPatterns;
 		this.idealOutputs = idelOutputs;
+		this.totalError = 0;
 
 		// Matrixes
 		// Input Layer
 		this.matrix_InputLayerInputSignal = new Matrix(1, this.argNumInputs + 1);
 		this.martix_weight_InputHidden = new Matrix(this.argNumInputs + 1, this.argNumHiddens);
 		this.matrix_weight_delta_InputHidden = new Matrix(this.argNumInputs + 1, this.argNumHiddens);
+		this.matrix_weight_privious_delta_InputHidden = new Matrix(this.argNumInputs + 1, this.argNumHiddens);
 		// Hidden Layer
 		this.matrix_HiddenLayerInputSignal = new Matrix(1, this.argNumInputs);
 		this.matrix_HiddenLayerOutputSignal = new Matrix(1, this.argNumHiddens + 1);
 		this.matrix_weight_HiddenOutput = new Matrix(this.argNumHiddens + 1, this.argNumOutputs);
 		this.matrix_weight_delta_HiddenOutput = new Matrix(this.argNumHiddens + 1, this.argNumOutputs);
+		this.matrix_weight_privious_delta_HiddenOutput = new Matrix(this.argNumHiddens + 1, this.argNumOutputs);
 		// Output Layer
 		this.matrix_OutputLayerInputSignal = new Matrix(1, this.argNumOutputs);
 
@@ -70,12 +78,15 @@ public class NeuralNetwork {
 	}
 
 	public void train() {
-		for (int j = 0; j < this.inputPatterns.length; j++) {
+		
+		for (int j = 0; j < inputPatterns.length; j++) {
 			idealOutput = idealOutputs[j][0];
 			FeedForwardCalculation(j);
 			BackpropagationCalculation(j);
 			learn();
+			totalErrorCalculate(j);
 		}
+		System.out.println(totalError);
 	}
 
 	private void FeedForwardCalculation(int j) {
@@ -119,8 +130,31 @@ public class NeuralNetwork {
 	}
 
 	private void learn() {
-		System.out.println("idealOutput: " + idealOutput + " actualOutput: " + actualOutput);
-		matrix_weight_HiddenOutput = MatrixMath.add(matrix_weight_HiddenOutput, matrix_weight_delta_HiddenOutput);
+		weightMatrixUpdate();
+	}
+	
+	private void totalErrorCalculate(int j) {
+		if(j == 0)
+			totalError = 0.0;
+		totalError = totalError + (idealOutput - actualOutput) * (idealOutput - actualOutput);
+		if(j == inputPatterns.length -1 )
+			totalError = Math.sqrt(totalError/inputPatterns.length);
+	}
+
+	private void weightMatrixUpdate() {
+
+		martix_weight_InputHidden = MatrixMath.add(martix_weight_InputHidden,
+				MatrixMath.multiply(matrix_weight_privious_delta_InputHidden, argMomentum));
 		martix_weight_InputHidden = MatrixMath.add(martix_weight_InputHidden, matrix_weight_delta_InputHidden);
+		matrix_weight_HiddenOutput = MatrixMath.add(matrix_weight_HiddenOutput,
+				MatrixMath.multiply(matrix_weight_privious_delta_HiddenOutput, argMomentum));
+		matrix_weight_HiddenOutput = MatrixMath.add(matrix_weight_HiddenOutput, matrix_weight_delta_HiddenOutput);
+		matrix_weight_privious_delta_InputHidden = matrix_weight_delta_InputHidden;
+		matrix_weight_privious_delta_HiddenOutput = matrix_weight_delta_HiddenOutput;
+	}
+	
+	
+	public double gettotalError() {
+		return this.totalError;
 	}
 }
