@@ -30,6 +30,7 @@ public class NeuralNetwork {
 	private Matrix matrix_weight_delta_InputHidden;
 	// Backpropagation weight privious delta
 	private Matrix matrix_weight_privious_delta_InputHidden;
+
 	// Hidden Layer's input
 	private Matrix matrix_HiddenLayerInputSignal;
 	// Hidden Layer's output
@@ -78,7 +79,6 @@ public class NeuralNetwork {
 	}
 
 	public void train() {
-		
 		for (int j = 0; j < inputPatterns.length; j++) {
 			idealOutput = idealOutputs[j][0];
 			FeedForwardCalculation(j);
@@ -90,13 +90,12 @@ public class NeuralNetwork {
 	}
 
 	private void FeedForwardCalculation(int j) {
-
 		// [0,0] add a bias at the front [1,0,0]
 		matrix_InputLayerInputSignal = SupportFunction.createInputMatrix(inputPatterns[j]);
 		// input multiply with weight matrix
 		matrix_HiddenLayerInputSignal = MatrixMath.multiply(matrix_InputLayerInputSignal, martix_weight_InputHidden);
 		// pass the Hidden Layers input through the activation function and add
-		// a bias at the front
+		// a bias at first 
 		for (int i = 0; i < matrix_HiddenLayerInputSignal.getCols(); i++) {
 			matrix_HiddenLayerOutputSignal.set(0, i + 1,
 					SupportFunction.sigmoid(matrix_HiddenLayerInputSignal.get(0, i)));
@@ -110,20 +109,17 @@ public class NeuralNetwork {
 	}
 
 	private void BackpropagationCalculation(int j) {
-
 		errorOutput = (idealOutput - actualOutput) * SupportFunction.derivativesigmoid(actualOutput);
-
 		for (int i = 0; i < matrix_weight_delta_HiddenOutput.getRows(); i++) {
 			matrix_weight_delta_HiddenOutput.set(i, 0,
 					argLearningRate * errorOutput * matrix_HiddenLayerOutputSignal.get(0, i));
 		}
-
 		for (int i = 1; i < matrix_weight_HiddenOutput.getRows(); i++) {
 			errorHidden = (errorOutput * matrix_weight_HiddenOutput.get(i, 0))
 					* SupportFunction.derivativesigmoid(matrix_HiddenLayerOutputSignal.get(0, i));
 			for (int k = 0; k < matrix_weight_delta_InputHidden.getRows(); k++) {
 				matrix_weight_delta_InputHidden.set(k, i - 1,
-						errorHidden * argLearningRate * matrix_InputLayerInputSignal.get(0, k));
+						argLearningRate * errorHidden * matrix_InputLayerInputSignal.get(0, k));
 			}
 		}
 
@@ -132,28 +128,37 @@ public class NeuralNetwork {
 	private void learn() {
 		weightMatrixUpdate();
 	}
-	
+
+	//Total Error (RMS Error)
+//	private void totalErrorCalculate(int j) {
+//		if (j == 0)
+//			totalError = 0.0;
+//		totalError = totalError + (idealOutput - actualOutput) * (idealOutput - actualOutput);
+//		if (j == inputPatterns.length - 1)
+//			totalError = Math.sqrt(totalError / inputPatterns.length);
+//	}
+
 	private void totalErrorCalculate(int j) {
-		if(j == 0)
+		if (j == 0)
 			totalError = 0.0;
-		totalError = totalError + (idealOutput - actualOutput) * (idealOutput - actualOutput);
-		if(j == inputPatterns.length -1 )
-			totalError = Math.sqrt(totalError/inputPatterns.length);
+		totalError = totalError + (actualOutput - idealOutput) * (actualOutput - idealOutput);
+		if (j == inputPatterns.length - 1)
+			totalError = totalError / 2.0;
 	}
 
 	private void weightMatrixUpdate() {
-
 		martix_weight_InputHidden = MatrixMath.add(martix_weight_InputHidden,
 				MatrixMath.multiply(matrix_weight_privious_delta_InputHidden, argMomentum));
 		martix_weight_InputHidden = MatrixMath.add(martix_weight_InputHidden, matrix_weight_delta_InputHidden);
 		matrix_weight_HiddenOutput = MatrixMath.add(matrix_weight_HiddenOutput,
 				MatrixMath.multiply(matrix_weight_privious_delta_HiddenOutput, argMomentum));
 		matrix_weight_HiddenOutput = MatrixMath.add(matrix_weight_HiddenOutput, matrix_weight_delta_HiddenOutput);
-		matrix_weight_privious_delta_InputHidden = matrix_weight_delta_InputHidden;
-		matrix_weight_privious_delta_HiddenOutput = matrix_weight_delta_HiddenOutput;
+		matrix_weight_privious_delta_InputHidden = MatrixMath.add(matrix_weight_delta_InputHidden,
+				MatrixMath.multiply(matrix_weight_privious_delta_InputHidden, argMomentum));
+		matrix_weight_privious_delta_HiddenOutput = MatrixMath.add(matrix_weight_delta_HiddenOutput,
+				MatrixMath.multiply(matrix_weight_privious_delta_HiddenOutput, argMomentum));
 	}
-	
-	
+
 	public double gettotalError() {
 		return this.totalError;
 	}
