@@ -13,7 +13,7 @@ public class RLQTable {
 	private void initialize() {
 		for (int i = 0; i < State.NumStates; i++)
 			for (int j = 0; j < Action.NumRobotActions; j++)
-				table[i][j] =  0;
+				table[i][j] =  -2*Math.random();
 	}
 
 	public double getMaxQValue(int state) {

@@ -14,7 +14,7 @@ public class MyRobot extends AdvancedRobot {
 
 	public static int NumTest = 150;
 	private static int timer = 0;
-	private static int total = 0;
+	static int total = 0;
 	private static double rewardsum = 0.0;
 	private static double rewardArray[] = new double[NumTest];
 	private static int flag = 0;
@@ -56,11 +56,14 @@ public class MyRobot extends AdvancedRobot {
 		int state = getState();
 		int action = learner.selectAction(state);
 		out.println("Action selected: " + action);
-//		learner.learnSarsa(state, action, reinforcement);
-		learner.learn(state, action, 0.0);
+//		learner.learnSarsa(state, action, reward);
+		learner.learn(state, action, reward);
 		reward = 0.0;
 
 		switch (action) {
+		case Action.RobotStop:
+			
+			break;
 		case Action.RobotGravity:
 			setupAntiGravityMove(+1000.0);
 			break;
@@ -283,7 +286,7 @@ public class MyRobot extends AdvancedRobot {
 	}
 
 	public void onWin(WinEvent event) {
-		learner.learnSarsa(getState(), learner.selectAction(getState()), 1.0);
+//		learner.learn(getState(), learner.selectAction(getState()), 1.0);
 		saveData();
 	}
 

@@ -2,7 +2,7 @@
 public class RLLearner {
 	public static final double LearningRate = 0.1;
 	public static final double DiscountRate = 0.9;
-	public static final double ExploitationRate = 0.3;
+	public static double ExplorationRate;
 	private int lastState;
 	private int lastAction;
 	private boolean first = true;
@@ -10,10 +10,13 @@ public class RLLearner {
 
 	public RLLearner(RLQTable table) {
 		this.table = table;
+		if(MyRobot.total<20)
+			ExplorationRate = 0.0;
+		else
+			ExplorationRate = 0.0;
 	}
 
 	public void learn(int state, int action, double reinforcement) {
-		// System.out.println("Reinforcement: " + reinforcement);
 		if (first)
 			first = false;
 		else {
@@ -43,7 +46,7 @@ public class RLLearner {
 		int selectedAction = -1;
 
 		// Explore
-		if (Math.random() < ExploitationRate) {
+		if (Math.random() < ExplorationRate) {
 			selectedAction = -1;
 		} else {
 			selectedAction = table.getBestAction(state);
